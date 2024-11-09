@@ -3,6 +3,10 @@
 CoreClass::CoreClass(){
   vectors.rectangleSelected = 0;
 
+  this->windowWidth = 1280;
+  this->windowHeight = 720;
+  this->startX = 0;
+  this->startY = 0;
    VectorClass::Objects objects[MAX_OBJECTS] = {   {{-10,-2}, {25,25},RED,0},{{-4, -2}, {25,25},RED,0}   };
    for (int i = 0; i < sizeof(objects) / sizeof(objects[0]); i++) {
        vectors.object.push_back(objects[i]);
@@ -57,7 +61,7 @@ void CoreClass::addObject(){
 void CoreClass::UpdateMap2D(){
 
 
-  vectors.ConvertMousePosition = {vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX()),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY())};
+  vectors.ConvertMousePosition = {vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)};
   Vector2 convertRectangle;
 
   for (auto& a : vectors.object) {
@@ -101,7 +105,7 @@ void CoreClass::DrawMap2D(){
   }
 }
 void CoreClass::DrawUIControls(){
-
+  DrawRectangleV({uiRect.x,uiRect.y}, {uiRect.width,uiRect.height}, BLACK);
   DrawRectangleLinesEx(uiRect, 10, WHITE);
 
   //DrawText(TextFormat("Point3 distance to origin: %f", distOriginPoint3),10,10,20,WHITE);
@@ -109,7 +113,7 @@ void CoreClass::DrawUIControls(){
     DrawText(TextFormat("grid-brightness: %.2f",fadeGrid),uiRect.width/5+uiRect.x,60,20,WHITE);
       DrawText("ARROW_DOWN: -  ARROW_UP: + ",uiRect.width/3+uiRect.x,80,10,WHITE);
   DrawText(TextFormat("(%f,%f)", (float)GetMouseX(), (float)GetMouseY()),10,10,20,WHITE);
-  DrawText(TextFormat("(%f,%f)", vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX()),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY())),10,30,20,WHITE);
+  DrawText(TextFormat("(%f,%f)", vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)),10,30,20,WHITE);
   DrawText("MAP-EDITOR --spacebar to add blocks--",320,10,20,WHITE);
 }
 void CoreClass::DrawingManager(){
@@ -122,8 +126,8 @@ void CoreClass::DrawingManager(){
 
 
 
-  vectors.DrawGrid(YELLOW, fadeGrid);
-  vectors.DrawPoint({500,500},BLUE);
+  vectors.DrawGrid(YELLOW, fadeGrid,startX,startY);
+  vectors.DrawPoint({startX+1000/2,startY+1000/2},BLUE);
   DrawMap2D();
   DrawUIControls();
   EndDrawing();
@@ -140,6 +144,16 @@ void CoreClass::Update(){
     addObject();
     UpdateMap2D();
     DrawingManager();
+
+    if (IsKeyDown(KEY_D)) startX -= 2.0f;
+    if (IsKeyDown(KEY_A))  startX += 2.0f;
+    if (IsKeyDown(KEY_W)) startY += 2.0f;
+    if (IsKeyDown(KEY_S)) startY -= 2.0f;
+    this->windowWidth = GetScreenWidth();
+    this->windowHeight = GetScreenHeight();
+    this->uiRect = {(this->windowWidth/1.28f),0,GetScreenWidth()/4.57f,GetScreenHeight()};
+
+
   }
 }
 

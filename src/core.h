@@ -8,9 +8,14 @@
 #define MAX_OBJECTS 200
 class CoreClass
 {
+public:
+  int windowWidth;
+  int windowHeight;
+  int startX;
+  int startY;
 private:
   //ui
-  Rectangle uiRect = {1000,0,280,720};
+  Rectangle uiRect;
 
 
   //player

@@ -1,13 +1,13 @@
 #include "core.h"
 
-#define WIDTH 1280
-#define HEIGHT 720
+
 
 
 int main(){
 
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   CoreClass core;
-  InitWindow(WIDTH, HEIGHT, "Raycaster-Engine");
+  InitWindow(core.windowWidth, core.windowHeight, "Raycaster-Engine");
 
   SetTargetFPS(60);
 

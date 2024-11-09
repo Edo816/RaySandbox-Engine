@@ -64,12 +64,12 @@ public:
    Vector2 VectorProjection(Vector2 pointNormalized, float scalarProjection);
    float ScalarDotProductProjection(Vector2 pointNormalized, Vector2 point);
    float  vectorPointLength(Vector2 point);
-   float ConvertRaylibMouseCoordinateX(float x);
-   float ConvertRaylibMouseCoordinateY(float y);
+   float ConvertRaylibMouseCoordinateX(float x, int startX);
+   float ConvertRaylibMouseCoordinateY(float y, int startY);
    Vector2 ConvertRaylibScreenCoordinates(Vector2 xy);
    float ConvertRaylibScreenRadius(float radius);
    Vector2 ReflectRay(Vector2 Dir, Vector2 n);
-   void DrawGrid(Color color, float fade);
+   void DrawGrid(Color color, float fade, int startX, int startY);
    void DrawPoint(Vector2 origin,Color color);
    void MovePoint();
    void Update();

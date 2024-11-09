@@ -36,13 +36,13 @@ float  VectorClass::vectorPointLength(Vector2 point){
 }
 
 
-float VectorClass::ConvertRaylibMouseCoordinateX(float x){
+float VectorClass::ConvertRaylibMouseCoordinateX(float x, int startX){
 
 
-  float x1 = ((float)GetMouseX() - (GetScreenWidth()-280)/2)/25;
+  float x1 = ((float)GetMouseX() - (GetScreenWidth()-((GetScreenWidth()/100)*21.88f)+startX)/2)/25;
   return x1;
 }
-float VectorClass::ConvertRaylibMouseCoordinateY(float y){
+float VectorClass::ConvertRaylibMouseCoordinateY(float y, int startY){
 
 
 
@@ -70,10 +70,11 @@ Vector2 VectorClass::ReflectRay(Vector2 Dir, Vector2 n){
   return {Dir.x - 2 * dotProductProjection * n.x, Dir.y - 2 * dotProductProjection * n.y};
 }
 
-void VectorClass::DrawGrid(Color color, float fade){
-  for(int y = 0; y < 1000; y+=25){
-    for (int x = 0; x < 1000; x+=25) {
+void VectorClass::DrawGrid(Color color, float fade, int startX, int startY){
+  for(int y = startY; y < 1000+startY; y+=25){
+    for (int x = startX; x < 1000+startX; x+=25) {
       DrawRectangleLines(x,y,25,25,Fade(color, fade));
+      DrawRectangleV({x,y},{24,24},Fade(GRAY, fade));
     }
   }
 }
@@ -86,7 +87,7 @@ void VectorClass::DrawPoint(Vector2 origin,Color color){
 }
 
 
-void VectorClass::MovePoint(){
+/*void VectorClass::MovePoint(){
 
 
 if(currentMode == 1){
@@ -200,7 +201,7 @@ void VectorClass::vectorsUpdate(){
 
 
 
-}
+}*/
 VectorClass::~VectorClass() {
 
 }
