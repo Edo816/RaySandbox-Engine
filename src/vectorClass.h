@@ -66,7 +66,7 @@ public:
    float  vectorPointLength(Vector2 point);
    float ConvertRaylibMouseCoordinateX(float x, int startX);
    float ConvertRaylibMouseCoordinateY(float y, int startY);
-   Vector2 ConvertRaylibScreenCoordinates(Vector2 xy);
+   Vector2 ConvertRaylibScreenCoordinates(Vector2 xy, int startX, int startY);
    float ConvertRaylibScreenRadius(float radius);
    Vector2 ReflectRay(Vector2 Dir, Vector2 n);
    void DrawGrid(Color color, float fade, int startX, int startY);

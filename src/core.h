@@ -13,6 +13,8 @@ public:
   int windowHeight;
   int startX;
   int startY;
+  Rectangle highlightRec;
+  int mouseButtonUp;
 private:
   //ui
   Rectangle uiRect;
@@ -38,6 +40,7 @@ public:
     void DrawMap2D();
     void UpdateMap2D();
     void DrawUIControls();
+
       float fadeGrid;
 
 };

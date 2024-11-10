@@ -39,14 +39,14 @@ float  VectorClass::vectorPointLength(Vector2 point){
 float VectorClass::ConvertRaylibMouseCoordinateX(float x, int startX){
 
 
-  float x1 = ((float)GetMouseX() - (GetScreenWidth()-((GetScreenWidth()/100)*21.88f)+startX)/2)/25;
+  float x1 = -((startX+1000/2)-(float)GetMouseX())/25;
   return x1;
 }
 float VectorClass::ConvertRaylibMouseCoordinateY(float y, int startY){
 
 
 
-  float y1 = (-((float)GetMouseY() - (GetScreenHeight()+280)/ 2))/25;
+  float y1 = ((startY+1000/2)-(float)GetMouseY())/25;
   return y1;
 }
 float VectorClass::ConvertRaylibScreenRadius(float radius){
@@ -56,11 +56,11 @@ float VectorClass::ConvertRaylibScreenRadius(float radius){
   return radius;
 }
 
-Vector2 VectorClass::ConvertRaylibScreenCoordinates(Vector2 xy){
+Vector2 VectorClass::ConvertRaylibScreenCoordinates(Vector2 xy, int startX, int startY){
 
 
-  xy.x = (GetScreenWidth() / 2-150+10) + (xy.x)*25;
-  xy.y = (GetScreenHeight() / 2+150-35) + (-(xy.y))*25;
+  xy.x =   ((startX+1000/2)-(-(xy.x*25)));
+  xy.y =   ((startY+1000/2)-(xy.y*25));
   return xy;
 }
 

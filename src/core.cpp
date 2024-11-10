@@ -7,6 +7,7 @@ CoreClass::CoreClass(){
   this->windowHeight = 720;
   this->startX = 0;
   this->startY = 0;
+  this->highlightRec = {0,0, 25,25};
    VectorClass::Objects objects[MAX_OBJECTS] = {   {{-10,-2}, {25,25},RED,0},{{-4, -2}, {25,25},RED,0}   };
    for (int i = 0; i < sizeof(objects) / sizeof(objects[0]); i++) {
        vectors.object.push_back(objects[i]);
@@ -50,14 +51,20 @@ CoreClass::CoreClass(){
 }
 void CoreClass::addObject(){
   int key = GetKeyPressed();
-
+  highlightRec.x = (int)vectors.ConvertMousePosition.x;
+  highlightRec.y = (int)vectors.ConvertMousePosition.y+1;
+  DrawRectangleV( vectors.ConvertRaylibScreenCoordinates({highlightRec.x, highlightRec.y},startX,startY),{highlightRec.width,highlightRec.height},YELLOW);
   if (key == 32 )  {
 
-    VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},{25,25},RED,0};
-    vectors.object.push_back(new_object);
-  }
+      VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},RED,0};
+      vectors.object.push_back(new_object);
+
+    }
+
+
 
 }
+
 void CoreClass::UpdateMap2D(){
 
 
@@ -67,41 +74,75 @@ void CoreClass::UpdateMap2D(){
   for (auto& a : vectors.object) {
 
 
-       if(IsMouseButtonUp(MOUSE_BUTTON_LEFT)){
-         vectors.rectangleSelected = 0;
-         for (auto& a : vectors.object) {
+
+
+      /*  if(IsMouseButtonUp(MOUSE_BUTTON_LEFT)){
+
+      for (auto& a : vectors.object) {
 
            a.selected = 0;
 
-         }
-       }
-    if(vectors.rectangleSelected == 0 && CheckCollisionPointRec(vectors.ConvertMousePosition,{a.position.x,a.position.y,a.size.x/30,a.size.y/30})){
+      }
+    }*/
+    if(a.selected == 1&&(!IsMouseButtonDown(MOUSE_BUTTON_LEFT))){
+            DrawLineV(vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY),vectors.ConvertRaylibScreenCoordinates({(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},startX,startY), YELLOW);
+        DrawText("blocks moved",320,120,20,WHITE);
+        a.position.x = (int)vectors.ConvertMousePosition.x;
+        a.position.y = (int)vectors.ConvertMousePosition.y+1;
+        for (auto& a : vectors.object) {
+
+             a.selected = 0;
+
+        }
+
+    }
+    if(a.selected == 1){
+      DrawLineV(vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY),vectors.ConvertRaylibScreenCoordinates({(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},startX,startY), YELLOW);
+
+    }
+
+    if(((vectors.ConvertMousePosition.x >=  a.position.x && vectors.ConvertMousePosition.x <= (a.position.x+1))&&(vectors.ConvertMousePosition.y >=  a.position.y-1 && vectors.ConvertMousePosition.y <= (a.position.y)))){
       a.color = YELLOW;
+      DrawLineV(vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY),vectors.ConvertRaylibScreenCoordinates({(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},startX,startY), YELLOW);
+      DrawText("selecting blocks",320,40,20,WHITE);
+      if(   IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+        a.selected = 1;
+        vectors.rectangleSelected = 1;
+        DrawText("moving blocks",320,80,20,WHITE);
+        a.position.x = vectors.ConvertMousePosition.x-0.5;
+        a.position.y = vectors.ConvertMousePosition.y+0.5;
 
-          a.selected = 1;
 
+      }
+      if(a.selected == 1&&(!IsMouseButtonDown(MOUSE_BUTTON_LEFT))){
+          DrawText("blocks moved",320,120,20,WHITE);
+          a.position.x = (int)vectors.ConvertMousePosition.x;
+          a.position.y = (int)vectors.ConvertMousePosition.y+1;
+          for (auto& a : vectors.object) {
+
+               a.selected = 0;
+
+          }
+      }
     }else{
       a.color = RED;
 
     }
 
 
-  }
-  for (auto& a : vectors.object){
-    if(  a.selected == 1 &&  IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
-      vectors.rectangleSelected = 1;
-      a.position.x = (int)vectors.ConvertMousePosition.x;
-      a.position.y = (int)vectors.ConvertMousePosition.y;
 
-    }
   }
 
 
+/*  for (auto& a : vectors.object) {
+    a.position = vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY);
+
+  }*/
 
 }
 void CoreClass::DrawMap2D(){
   for (auto& a : vectors.object) {
-    DrawRectangleV( vectors.ConvertRaylibScreenCoordinates({a.position.x, a.position.y}),{a.size.x,a.size.y}, a.color);
+    DrawRectangleV( vectors.ConvertRaylibScreenCoordinates({a.position.x, a.position.y},startX,startY),{a.size.x,a.size.y}, a.color);
   }
 }
 void CoreClass::DrawUIControls(){
@@ -145,10 +186,10 @@ void CoreClass::Update(){
     UpdateMap2D();
     DrawingManager();
 
-    if (IsKeyDown(KEY_D)) startX -= 2.0f;
-    if (IsKeyDown(KEY_A))  startX += 2.0f;
-    if (IsKeyDown(KEY_W)) startY += 2.0f;
-    if (IsKeyDown(KEY_S)) startY -= 2.0f;
+    if (IsKeyDown(KEY_D)) startX += 1.0f;
+    if (IsKeyDown(KEY_A))  startX -= 1.0f;
+    if (IsKeyDown(KEY_W)) startY -= 1.0f;
+    if (IsKeyDown(KEY_S)) startY += 1.0f;
     this->windowWidth = GetScreenWidth();
     this->windowHeight = GetScreenHeight();
     this->uiRect = {(this->windowWidth/1.28f),0,GetScreenWidth()/4.57f,GetScreenHeight()};
