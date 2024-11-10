@@ -8,12 +8,16 @@ CoreClass::CoreClass(){
   this->startX = 0;
   this->startY = 0;
   this->highlightRec = {0,0, 25,25};
+  this->isSelected=0;
+  this->place=0;
+  this->startPlace=0;
+  this->startPlacePosition = {0,0};
    VectorClass::Objects objects[MAX_OBJECTS] = {   {{-10,-2}, {25,25},RED,0},{{-4, -2}, {25,25},RED,0}   };
-   for (int i = 0; i < sizeof(objects) / sizeof(objects[0]); i++) {
+   for (int i = 0; i < 2; i++) {
        vectors.object.push_back(objects[i]);
    }
 
-   objectCounter = sizeof(objects);
+   objectCounter = vectors.object.size();
 
 
   fadeGrid = 0.2f;
@@ -54,13 +58,21 @@ void CoreClass::addObject(){
   highlightRec.x = (int)vectors.ConvertMousePosition.x;
   highlightRec.y = (int)vectors.ConvertMousePosition.y+1;
   DrawRectangleV( vectors.ConvertRaylibScreenCoordinates({highlightRec.x, highlightRec.y},startX,startY),{highlightRec.width,highlightRec.height},YELLOW);
-  if (key == 32 )  {
+
+  for (auto& a : vectors.object) {
+    if((int)vectors.ConvertMousePosition.x==a.position.x&&(int)vectors.ConvertMousePosition.y+1==a.position.y){
+      place = 1;
+    }
+  }
+  if (key == 32 && place == 0)  {
 
       VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},RED,0};
       vectors.object.push_back(new_object);
+      place = 1;
 
     }
 
+    place = 0;
 
 
 }
@@ -87,11 +99,25 @@ void CoreClass::UpdateMap2D(){
     if(a.selected == 1&&(!IsMouseButtonDown(MOUSE_BUTTON_LEFT))){
             DrawLineV(vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY),vectors.ConvertRaylibScreenCoordinates({(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},startX,startY), YELLOW);
         DrawText("blocks moved",320,120,20,WHITE);
-        a.position.x = (int)vectors.ConvertMousePosition.x;
-        a.position.y = (int)vectors.ConvertMousePosition.y+1;
+        for (auto& a : vectors.object) {
+          if((int)vectors.ConvertMousePosition.x==a.position.x&&(int)vectors.ConvertMousePosition.y+1==a.position.y){
+            place = 1;
+          }
+        }
+        if(place == 0){
+          a.position.x = (int)vectors.ConvertMousePosition.x;
+          a.position.y = (int)vectors.ConvertMousePosition.y+1;
+        }
+        if(place == 1){
+          a.position.x = (int)startPlacePosition.x;
+          a.position.y = (int)startPlacePosition.y;
+        }
         for (auto& a : vectors.object) {
 
              a.selected = 0;
+             isSelected = 0;
+             place = 0;
+             startPlace = 0;
 
         }
 
@@ -105,12 +131,34 @@ void CoreClass::UpdateMap2D(){
       a.color = YELLOW;
       DrawLineV(vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY),vectors.ConvertRaylibScreenCoordinates({(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},startX,startY), YELLOW);
       DrawText("selecting blocks",320,40,20,WHITE);
+        std::cout << "isSelected: " << isSelected << '\n';
       if(   IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
-        a.selected = 1;
+        if(startPlace == 0){
+          startPlacePosition.x = a.position.x;
+          startPlacePosition.y = a.position.y;
+          startPlace = 1;
+        }
+        if(isSelected == 0){
+          for (auto& a : vectors.object) {
+            if(a.selected == 1){
+              isSelected = 1;
+            }
+
+
+          }
+
+        }
+
+        if(isSelected == 0){
+          a.selected = 1;
+        }
+
         vectors.rectangleSelected = 1;
-        DrawText("moving blocks",320,80,20,WHITE);
-        a.position.x = vectors.ConvertMousePosition.x-0.5;
-        a.position.y = vectors.ConvertMousePosition.y+0.5;
+        if (a.selected == 1) {
+          DrawText("moving blocks",320,80,20,WHITE);
+          a.position.x = vectors.ConvertMousePosition.x-0.5;
+          a.position.y = vectors.ConvertMousePosition.y+0.5;
+        }
 
 
       }
@@ -155,6 +203,7 @@ void CoreClass::DrawUIControls(){
       DrawText("ARROW_DOWN: -  ARROW_UP: + ",uiRect.width/3+uiRect.x,80,10,WHITE);
   DrawText(TextFormat("(%f,%f)", (float)GetMouseX(), (float)GetMouseY()),10,10,20,WHITE);
   DrawText(TextFormat("(%f,%f)", vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)),10,30,20,WHITE);
+  DrawText(TextFormat("Objects: %d",objectCounter),10,50,20,WHITE);
   DrawText("MAP-EDITOR --spacebar to add blocks--",320,10,20,WHITE);
 }
 void CoreClass::DrawingManager(){
@@ -185,7 +234,7 @@ void CoreClass::Update(){
     addObject();
     UpdateMap2D();
     DrawingManager();
-
+    objectCounter = vectors.object.size();
     if (IsKeyDown(KEY_D)) startX += 1.0f;
     if (IsKeyDown(KEY_A))  startX -= 1.0f;
     if (IsKeyDown(KEY_W)) startY -= 1.0f;

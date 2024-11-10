@@ -15,6 +15,10 @@ public:
   int startY;
   Rectangle highlightRec;
   int mouseButtonUp;
+  int isSelected;
+  int place;
+  Vector2 startPlacePosition;
+  int startPlace;
 private:
   //ui
   Rectangle uiRect;
