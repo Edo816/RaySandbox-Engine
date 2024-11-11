@@ -19,6 +19,11 @@ public:
   int place;
   Vector2 startPlacePosition;
   int startPlace;
+  std::vector<std::vector<int>> map2d;
+  int mapRows;
+  int mapColumns;
+  int map2dX;
+  int map2dY;
 private:
   //ui
   Rectangle uiRect;

@@ -12,6 +12,15 @@ CoreClass::CoreClass(){
   this->place=0;
   this->startPlace=0;
   this->startPlacePosition = {0,0};
+  this->mapRows = 40;
+  this->mapColumns = 40;
+  std::vector<std::vector<int>>  map( mapRows , std::vector<int> (mapColumns, 0));
+  map2d = map;
+
+
+
+
+
    VectorClass::Objects objects[MAX_OBJECTS] = {   {{-10,-2}, {25,25},RED,0},{{-4, -2}, {25,25},RED,0}   };
    for (int i = 0; i < 2; i++) {
        vectors.object.push_back(objects[i]);
@@ -131,7 +140,7 @@ void CoreClass::UpdateMap2D(){
       a.color = YELLOW;
       DrawLineV(vectors.ConvertRaylibScreenCoordinates(a.position,startX,startY),vectors.ConvertRaylibScreenCoordinates({(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y},startX,startY), YELLOW);
       DrawText("selecting blocks",320,40,20,WHITE);
-        std::cout << "isSelected: " << isSelected << '\n';
+      //std::cout << "isSelected: " << isSelected << '\n';
       if(   IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
         if(startPlace == 0){
           startPlacePosition.x = a.position.x;
@@ -187,10 +196,44 @@ void CoreClass::UpdateMap2D(){
 
   }*/
 
+for(int i = 0; i < mapRows; i++)
+  {
+      for(int j = 0; j < mapColumns; j++)
+      {
+          map2d[i][j] = 0;
+                  for (auto& a : vectors.object) {
+                    if (-(i-20) == a.position.y && (j-20) == a.position.x) {
+                      map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 1;
+                    }
+                  }
+
+
+
+
+      }
+  }
+
 }
 void CoreClass::DrawMap2D(){
+
+
   for (auto& a : vectors.object) {
     DrawRectangleV( vectors.ConvertRaylibScreenCoordinates({a.position.x, a.position.y},startX,startY),{a.size.x,a.size.y}, a.color);
+  }
+  map2dX = 0;
+  map2dY = 0;
+  if (IsKeyDown(KEY_E)) {
+    for(int i = 0; i < mapRows; i++)
+    {
+        for(int j = 0; j < mapColumns; j++)
+        {
+            DrawText(TextFormat("%d",map2d[i][j]),12+startX+map2dX,startY+map2dY,20,WHITE);
+            map2dX = map2dX + 25;
+        }
+      map2dY = map2dY + 25;
+      map2dX = 0;
+
+    }
   }
 }
 void CoreClass::DrawUIControls(){
