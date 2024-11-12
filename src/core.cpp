@@ -66,6 +66,7 @@ void CoreClass::addObject(){
   int key = GetKeyPressed();
   highlightRec.x = (int)vectors.ConvertMousePosition.x;
   highlightRec.y = (int)vectors.ConvertMousePosition.y+1;
+  Vector2 rec;
   DrawRectangleV( vectors.ConvertRaylibScreenCoordinates({highlightRec.x, highlightRec.y},startX,startY),{highlightRec.width,highlightRec.height},YELLOW);
 
   for (auto& a : vectors.object) {
@@ -73,7 +74,9 @@ void CoreClass::addObject(){
       place = 1;
     }
   }
-  if (key == 32 && place == 0)  {
+  std::cout << "highlightRecX: " << highlightRec.x << '\n';
+  std::cout << "highlightRecY: " << highlightRec.y << '\n';
+  if (key == 32 && place == 0 && (highlightRec.x >= (-20) && highlightRec.x <= (19)) && (highlightRec.y <= (20) && highlightRec.y >= (-19))  )  {
 
       VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},RED,0};
       vectors.object.push_back(new_object);
@@ -88,7 +91,8 @@ void CoreClass::addObject(){
 
 void CoreClass::UpdateMap2D(){
 
-
+  std::cout << "mouseX: " << (int)vectors.ConvertMousePosition.x << '\n';
+  std::cout << "mouseY: " << (int)vectors.ConvertMousePosition.y << '\n';
   vectors.ConvertMousePosition = {vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)};
   Vector2 convertRectangle;
 
@@ -114,8 +118,13 @@ void CoreClass::UpdateMap2D(){
           }
         }
         if(place == 0){
-          a.position.x = (int)vectors.ConvertMousePosition.x;
-          a.position.y = (int)vectors.ConvertMousePosition.y+1;
+          if ((highlightRec.x >= (-20) && highlightRec.x <= (19)) && (highlightRec.y <= (20) && highlightRec.y >= (-19))) {
+            a.position.x = (int)vectors.ConvertMousePosition.x;
+            a.position.y = (int)vectors.ConvertMousePosition.y+1;
+          }else{
+            place = 1;
+          }
+
         }
         if(place == 1){
           a.position.x = (int)startPlacePosition.x;
