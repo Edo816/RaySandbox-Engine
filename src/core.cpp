@@ -15,8 +15,16 @@ CoreClass::CoreClass(){
   this->mapRows = 40;
   this->mapColumns = 40;
   this->playerPos = {2,-2};
-  this->playerDeltaX = cos(playerAngle)*5;
-  this->playerDeltaY = sin(playerAngle)*5;
+  this->convertPlayerPos = vectors.ConvertRaylibScreenCoordinates(this->playerPos,this->startX,this->startY);
+  this->directionLength = 5;
+  this->playerDirection = {0,1};
+  this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x)),playerPos.y+(playerDirection.y)},this->startX,this->startY);
+  this->planeVector = {(playerPos.y+playerDirection.y)/2,(playerPos.x+playerDirection.x)*(-1/2)-1};
+  std::cout << "planeX: " << planeVector.x << '\n';
+  std::cout << "planeY: " << planeVector.y << '\n';
+  this->convertPlaneVector = vectors.ConvertRaylibScreenCoordinates(this->planeVector,this->startX,this->startY);
+/*  this->playerDeltaX = cos(playerAngle)*5;
+  this->playerDeltaY = sin(playerAngle)*5;*/
   std::vector<std::vector<int>>  map( mapRows , std::vector<int> (mapColumns, 0));
   map2d = map;
 
@@ -116,7 +124,9 @@ void CoreClass::UpdateMap2D(){
   vectors.ConvertMousePosition = {vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)};
   Vector2 convertRectangle;
   convertPlayerPos = vectors.ConvertRaylibScreenCoordinates(playerPos,startX,startY);
-  DrawLineV(convertPlayerPos,{convertPlayerPos.x+(playerDeltaX*5),convertPlayerPos.y+(playerDeltaY*5)},YELLOW);
+  DrawLineV(convertPlayerPos,convertPlayerDirection,YELLOW);
+  DrawLineV(convertPlaneVector,{convertPlaneVector.x+((convertPlayerDirection.x-convertPlaneVector.x)*2),convertPlaneVector.y},YELLOW);
+  //DrawLineV(convertPlaneVector,{convertPlaneVector.x*2,convertPlaneVector.y},YELLOW);
   for (auto& a : vectors.object) {
 
 
@@ -313,7 +323,7 @@ void CoreClass::Update(){
     DrawingManager();
     objectCounter = vectors.object.size();
 
-    if (IsKeyDown(KEY_A))   {
+    /*if (IsKeyDown(KEY_A))   {
       playerAngle -= 0.05f;
       if(playerAngle < 0){
         playerAngle += 2 * PI;
@@ -337,7 +347,7 @@ void CoreClass::Update(){
     if (IsKeyDown(KEY_S)){
       playerPos.x-=playerDeltaX*0.005;
       playerPos.y+=playerDeltaY*0.005;
-    }
+    }*/
     /*std::cout << "playerPosX: " << playerPos.x << '\n';
     std::cout << "playerPosY: " << playerPos.y << '\n';*/
     if (IsKeyDown(KEY_RIGHT)) startX += 1.0f;

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <raylib.h>
+#include <raymath.h>
 #include "vectorClass.h"
 #define MAX_OBJECTS 200
 #define PI 3.1415926535
@@ -27,9 +28,14 @@ public:
   int map2dY;
   Vector2 playerPos;
   Vector2 convertPlayerPos;
-  double playerAngle;
+  /*double playerAngle;
   double playerDeltaX;
-  double playerDeltaY;
+  double playerDeltaY;*/
+  Vector2 playerDirection;
+  Vector2 convertPlayerDirection;
+  int directionLength;
+  Vector2 planeVector;
+  Vector2 convertPlaneVector;
 private:
   //ui
   Rectangle uiRect;
