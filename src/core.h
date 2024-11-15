@@ -6,6 +6,7 @@
 #include <raylib.h>
 #include "vectorClass.h"
 #define MAX_OBJECTS 200
+#define PI 3.1415926535
 class CoreClass
 {
 public:
@@ -24,6 +25,11 @@ public:
   int mapColumns;
   int map2dX;
   int map2dY;
+  Vector2 playerPos;
+  Vector2 convertPlayerPos;
+  double playerAngle;
+  double playerDeltaX;
+  double playerDeltaY;
 private:
   //ui
   Rectangle uiRect;
@@ -46,11 +52,13 @@ public:
   void addObject();
   void Update();
   void DrawingManager();
-    void DrawMap2D();
-    void UpdateMap2D();
-    void DrawUIControls();
+  void DrawMap2D();
+  void UpdateMap2D();
+  void DrawMap3D();
+  void UpdateMap3D();
+  void DrawUIControls();
 
-      float fadeGrid;
+  float fadeGrid;
 
 };
 
