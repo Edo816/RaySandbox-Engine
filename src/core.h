@@ -33,7 +33,7 @@ public:
   double playerDeltaY;*/
   Vector2 playerDirection;
   Vector2 convertPlayerDirection;
-  int directionLength;
+  double directionLength;
   Vector2 planeVector;
   Vector2 convertPlaneVector;
 private:
