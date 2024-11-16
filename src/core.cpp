@@ -17,12 +17,16 @@ CoreClass::CoreClass(){
   this->playerPos = {2,-2};
   this->convertPlayerPos = vectors.ConvertRaylibScreenCoordinates(this->playerPos,this->startX,this->startY);
   this->directionLength = 5;
-  this->playerDirection = {0,1};
-  this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x)),playerPos.y+(playerDirection.y)},this->startX,this->startY);
-  this->planeVector = {(playerPos.y+playerDirection.y)/2,(playerPos.x+playerDirection.x)*(-1/2)-1};
+  this->playerDirection = {0,1*this->directionLength};
+//  this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x)),playerPos.y+(playerDirection.y)},this->startX,this->startY);
+  this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({this->playerPos.x+this->playerDirection.x,this->playerPos.y+this->playerDirection.y},this->startX,this->startY);
+  this->planeVector = {(playerPos.x+playerDirection.x)/2,((playerPos.y+playerDirection.y)*(-1/2))-1};
   std::cout << "planeX: " << planeVector.x << '\n';
   std::cout << "planeY: " << planeVector.y << '\n';
-  this->convertPlaneVector = vectors.ConvertRaylibScreenCoordinates(this->planeVector,this->startX,this->startY);
+  this->convertPlaneVector = vectors.ConvertRaylibScreenCoordinates(this->planeVector,0,this->startY);
+
+
+
 /*  this->playerDeltaX = cos(playerAngle)*5;
   this->playerDeltaY = sin(playerAngle)*5;*/
   std::vector<std::vector<int>>  map( mapRows , std::vector<int> (mapColumns, 0));
@@ -123,9 +127,18 @@ void CoreClass::UpdateMap2D(){
 
   vectors.ConvertMousePosition = {vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)};
   Vector2 convertRectangle;
+  playerDirection = {0,1*directionLength};
+  planeVector = {(playerPos.x+playerDirection.x)/2,((playerPos.y+playerDirection.y)*(-1/2))-1};
   convertPlayerPos = vectors.ConvertRaylibScreenCoordinates(playerPos,startX,startY);
+  convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({playerPos.x+playerDirection.x,playerPos.y+playerDirection.y},startX,startY);
+  convertPlaneVector = vectors.ConvertRaylibScreenCoordinates(planeVector,0,startY);
   DrawLineV(convertPlayerPos,convertPlayerDirection,YELLOW);
-  DrawLineV(convertPlaneVector,{convertPlaneVector.x+((convertPlayerDirection.x-convertPlaneVector.x)*2),convertPlaneVector.y},YELLOW);
+  //DrawLineV({((convertPlayerDirection.x)-convertPlaneVector.x),convertPlayerDirection.y},{((convertPlayerDirection.x)+convertPlaneVector.x),convertPlayerDirection.y},YELLOW);
+    DrawLineV(convertPlayerDirection,{convertPlayerDirection.x-convertPlaneVector.x,convertPlayerDirection.y},YELLOW);
+    DrawLineV(convertPlayerDirection,{convertPlayerDirection.x+convertPlaneVector.x,convertPlayerDirection.y},YELLOW);
+
+    std::cout << "convertDirection: "   << '\n';
+//  DrawLineV(convertPlaneVector,{convertPlaneVector.x+((convertPlayerDirection.x-convertPlaneVector.x)*2),convertPlaneVector.y},YELLOW);
   //DrawLineV(convertPlaneVector,{convertPlaneVector.x*2,convertPlaneVector.y},YELLOW);
   for (auto& a : vectors.object) {
 
@@ -350,6 +363,13 @@ void CoreClass::Update(){
     }*/
     /*std::cout << "playerPosX: " << playerPos.x << '\n';
     std::cout << "playerPosY: " << playerPos.y << '\n';*/
+    if (IsKeyDown(KEY_W)){
+
+      playerPos.y+=0.05;
+    }
+    if (IsKeyDown(KEY_S)){
+      playerPos.y-=0.05;
+    }
     if (IsKeyDown(KEY_RIGHT)) startX += 1.0f;
     if (IsKeyDown(KEY_LEFT))  startX -= 1.0f;
     if (IsKeyDown(KEY_UP)) startY -= 1.0f;
