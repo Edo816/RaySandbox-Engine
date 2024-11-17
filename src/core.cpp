@@ -20,7 +20,7 @@ CoreClass::CoreClass(){
   this->playerDirection = {1,0};
 //  this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x)),playerPos.y+(playerDirection.y)},this->startX,this->startY);
   this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({this->playerPos.x+this->playerDirection.x,this->playerPos.y+this->playerDirection.y},this->startX,this->startY);
-  this->planeVector = {0,0.77};
+  this->planeVector = {0,1};
   std::cout << "planeX: " << planeVector.x << '\n';
   std::cout << "planeY: " << planeVector.y << '\n';
   this->convertPlaneVector = vectors.ConvertRaylibScreenCoordinates(this->planeVector,0,this->startY);
@@ -135,11 +135,21 @@ void CoreClass::UpdateMap2D(){
   //std::cout << "convertPlayerDirection: " << convertPlayerDirection.x << '\n';
   convertPlaneVector = vectors.ConvertRaylibScreenCoordinates({playerPos.x+playerDirection.x+planeVector.x,playerPos.y+playerDirection.y+planeVector.y},startX,startY);
   Vector2 convertPlaneVector2 = vectors.ConvertRaylibScreenCoordinates({playerPos.x+playerDirection.x-planeVector.x,playerPos.y+playerDirection.y-planeVector.y},startX,startY);
+  Vector2 convertPlaneVectorExtend = vectors.ConvertRaylibScreenCoordinates({playerPos.x+playerDirection.x-planeVector.x,playerPos.y+playerDirection.y-planeVector.y},startX,startY);
+  double plane1Slope = (playerPos.y+playerDirection.y+planeVector.y) - playerPos.y / (playerPos.x+playerDirection.x+planeVector.x) - playerPos.x;
+//  double b = playerPos.y - (plane1Slope * playerPos.x);
+
+
+
+
+
   DrawLineV(convertPlayerPos,convertPlayerDirection,BLUE);
   DrawLineV(convertPlayerDirection,convertPlaneVector,YELLOW);
   DrawLineV(convertPlayerDirection,convertPlaneVector2,YELLOW);
-//  DrawLineV(convertPlayerDirection,convertPlaneVector,YELLOW);
-
+  DrawLineV(convertPlayerPos,convertPlaneVector,YELLOW);
+  DrawLineV(convertPlayerPos,convertPlaneVector2,YELLOW);
+  DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x*(20))+(planeVector.x*20)),playerPos.y+(playerDirection.y*(20))+(planeVector.y*20)},startX,startY),YELLOW);
+  DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x*(20))-(planeVector.x*20)),playerPos.y+(playerDirection.y*(20))-(planeVector.y*20)},startX,startY),YELLOW);
     Vector2 posDirPlane1 = {playerPos.x+playerDirection.x-(planeVector.x), playerPos.y+playerDirection.y-(planeVector.y)};
     Vector2 posDirPlane2 = {playerPos.x+playerDirection.x+(planeVector.x), playerPos.y+playerDirection.y+(planeVector.y)};
     Vector2 ray1 = {(playerPos.x+playerDirection.x-(planeVector.x)), (planeVector.y)};
@@ -316,6 +326,7 @@ void CoreClass::DrawUIControls(){
   DrawText(TextFormat("Objects: %d",objectCounter),10,50,20,WHITE);
   DrawText("MAP-EDITOR --spacebar to add blocks--",320,10,20,WHITE);
   DrawText("player",convertPlayerPos.x-15,convertPlayerPos.y-20,5,{255,255,255,170});
+  DrawFPS(GetScreenWidth() - uiRect.width-100, 10);
 }
 void CoreClass::DrawingManager(){
 
@@ -378,15 +389,33 @@ void CoreClass::Update(){
     /*std::cout << "playerPosX: " << playerPos.x << '\n';
     std::cout << "playerPosY: " << playerPos.y << '\n';*/
     double rotation = 0.01*3;
-    if (IsKeyDown(KEY_I)){directionLength += 0.01;}
-    if (IsKeyDown(KEY_U)){ directionLength -= 0.01;}
+      if (!IsKeyDown(KEY_U)){
+        if (IsKeyDown(KEY_I)){
+          if(directionLength <= 1.07){
+            directionLength += 0.001;
+            playerDirection.x *= directionLength;playerDirection.y *= directionLength;
+          }
+        }
+      }
+
+      if (!IsKeyDown(KEY_I)){
+        if (IsKeyDown(KEY_U)){
+          if(directionLength >= 1){
+            directionLength -= 0.001;
+            playerDirection.x *= 1/directionLength;playerDirection.y *= 1/directionLength;
+          }
+
+
+          }
+      }
+
     if (IsKeyDown(KEY_W)){
-      playerPos.x += playerDirection.x * 0.1;
-      playerPos.y += playerDirection.y * 0.1;
+      playerPos.x += playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      playerPos.y += playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_S)){
-      playerPos.x -= playerDirection.x * 0.1;
-      playerPos.y -= playerDirection.y * 0.1;
+      playerPos.x -= playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      playerPos.y -= playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_D)){
       std::cout << "playerDirX: "  << playerDirection.x << '\n';

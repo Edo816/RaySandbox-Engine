@@ -36,6 +36,7 @@ public:
   double directionLength;
   Vector2 planeVector;
   Vector2 convertPlaneVector;
+  double y;
 private:
   //ui
   Rectangle uiRect;
