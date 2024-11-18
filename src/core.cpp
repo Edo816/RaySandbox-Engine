@@ -14,17 +14,18 @@ CoreClass::CoreClass(){
   this->startPlacePosition = {0,0};
   this->mapRows = 40;
   this->mapColumns = 40;
-  this->playerPos = {2,-2};
+  this->playerPos = {-16,16};
   this->convertPlayerPos = vectors.ConvertRaylibScreenCoordinates(this->playerPos,this->startX,this->startY);
   this->directionLength = 1;
   this->playerDirection = {1,0};
 //  this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x)),playerPos.y+(playerDirection.y)},this->startX,this->startY);
   this->convertPlayerDirection = vectors.ConvertRaylibScreenCoordinates({this->playerPos.x+this->playerDirection.x,this->playerPos.y+this->playerDirection.y},this->startX,this->startY);
-  this->planeVector = {0,1};
+  this->planeVector = {0,0.77};
   std::cout << "planeX: " << planeVector.x << '\n';
   std::cout << "planeY: " << planeVector.y << '\n';
   this->convertPlaneVector = vectors.ConvertRaylibScreenCoordinates(this->planeVector,0,this->startY);
 
+  this->draw3Dmap = 0;
 
 
 /*  this->playerDeltaX = cos(playerAngle)*5;
@@ -36,10 +37,32 @@ CoreClass::CoreClass(){
 
 
 
-  VectorClass::Objects objects[MAX_OBJECTS] = {   {{-10,-2}, {25,25},RED,0},{{-4, -2}, {25,25},RED,0}   };
+  VectorClass::Objects objects[MAX_OBJECTS] = {
+    {{-10,-2}, {25,25},RED,0},{{-4, -2}, {25,25},RED,0}   };
   for (int i = 0; i < 2; i++) {
     vectors.object.push_back(objects[i]);
   }
+
+
+    for (int x = -20; x <= 19; x++) {
+        VectorClass::Objects new_object = {{x,20},{25,25},RED,0};
+            vectors.object.push_back(new_object);
+    }
+
+    for (int x = -20; x <= 19; x++) {
+        VectorClass::Objects new_object = {{x,-19},{25,25},RED,0};
+            vectors.object.push_back(new_object);
+    }
+
+    for (int y = 19; y >= -18; y--) {
+        VectorClass::Objects new_object = {{-20,y},{25,25},RED,0};
+            vectors.object.push_back(new_object);
+    }
+
+    for (int y = 19; y >= -18; y--) {
+        VectorClass::Objects new_object = {{19,y},{25,25},RED,0};
+            vectors.object.push_back(new_object);
+    }
 
   objectCounter = vectors.object.size();
 
@@ -80,7 +103,129 @@ CoreClass::CoreClass(){
 
 
 void CoreClass::DrawMap3D(){
+  //which box of the map we're in
 
+  for(int x = 0; x < GetScreenWidth(); x++)
+  {
+    //calculate ray position and direction
+
+     cameraX = 2 * x / double(GetScreenWidth()) - 1; //x-coordinate in camera space
+     rayDirX = (playerDirection.x+(-(planeVector.x*cameraX)));
+     rayDirY = (playerDirection.y+(-(planeVector.y*cameraX)));
+     mapX = ((int)(playerPos.x));
+     mapY = ((int)(playerPos.y));
+     //DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+playerDirection.x+((planeVector.x*cameraX))),(playerPos.y+playerDirection.y+((planeVector.y*cameraX)))},startX,startY),BLUE);
+  /*   if (-(i-20) == a.position.y && (j-20) == a.position.x) {
+       map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 1;
+     }*/
+     //std::cout << "playerX: " << (int)playerPos.x<< '\n';
+     //std::cout << "playerY: " << (int)playerPos.y<< '\n';
+
+    //length of ray from current position to next x or y-side
+
+     deltaDistX = (rayDirX == 0) ? 1e30 : std::abs(1 / rayDirX);
+     deltaDistY = (rayDirY == 0) ? 1e30 : std::abs(1 / rayDirY);
+
+     //length of ray from one x or y-side to next x or y-side
+
+
+
+    //what direction to step in x or y-direction (either +1 or -1)
+
+     hit = 0; //was there a wall hit?
+
+
+
+  if (rayDirX < 0)
+  {
+    stepX = -1;
+    sideDistX = (playerPos.x - mapX) * deltaDistX;
+  }
+  else
+  {
+    stepX = 1;
+    sideDistX = (mapX + 1.0 - playerPos.x) * deltaDistX;
+  }
+  if (rayDirY < 0)
+  {
+    stepY = -1;
+    sideDistY = (playerPos.y - mapY) * deltaDistY;
+  }
+  else
+  {
+    stepY = 1;
+    sideDistY = (mapY + 1.0 - playerPos.y) * deltaDistY;
+  }
+  // std::cout << "map: " << map2d[(20-(mapY))-1][(20+(mapX))-1] << '\n';
+  // std::cout << "mapX: " << mapX << '\n';
+  // std::cout << "mapY: " << mapY << '\n';
+  //perform DDA
+//DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+playerDirection.x+(planeVector.x*cameraX)),playerPos.y+playerDirection.y+(planeVector.y*cameraX)},startX,startY),BLUE);
+//DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+playerDirection.x+(planeVector.x*cameraX)+sideDistX),playerPos.y+playerDirection.y+(planeVector.y*cameraX)+sideDistY},startX,startY),GREEN);
+  while (hit == 0  )
+  {
+
+
+    //jump to next map square, either in x-direction, or in y-direction
+
+    if (sideDistX < sideDistY )
+    {
+      sideDistX += deltaDistX;
+    //  if(mapX <= 40 && mapX >= 0){
+        mapX = mapX + (stepX);
+      //}
+
+      side = 0;
+    }
+    else if( sideDistX >= sideDistY )
+    {
+      sideDistY += deltaDistY;
+  //    if(mapY <= 40 && mapY >= 0){
+        mapY = mapY + (stepY);
+    //  }
+      side = 1;
+    }
+
+      //Check if ray has hit a wall
+    if (map2d[(20-(mapY))-1][(20+(mapX))-1] > 0) hit = 1;
+    // std::cout << "playerX: " << playerPos.x << '\n';
+    // std::cout << "playerY: " << playerPos.y<< '\n';
+    // std::cout << "map: " << map2d[mapY][mapX] << '\n';
+    // std::cout << "map: " << map2d[mapY][mapX] << '\n';
+  }
+
+      if(side == 0) {perpWallDist = (sideDistX - deltaDistX);}
+      else {         perpWallDist = (sideDistY - deltaDistY);}
+      //Calculate height of line to draw on screen
+       lineHeight = (int)(GetScreenHeight() / perpWallDist);
+
+      //calculate lowest and highest pixel to fill in current stripe
+       drawStart = -lineHeight / 2 + GetScreenHeight() / 2;
+      if(drawStart < 0)drawStart = 0;
+       drawEnd = lineHeight / 2 + GetScreenHeight() / 2;
+      if(drawEnd >= GetScreenHeight())drawEnd = GetScreenHeight() - 1;
+       color;
+      switch(map2d[(20-(mapY))-1][(20+(mapX))-1])
+      {
+        case 1:  color = RED;  break; //red
+        case 2:  color = BLUE;  break; //green
+        default: color = RED; break; //yellow
+      }
+
+      //give x and y sides different brightness
+      if (side == 1) {color =  {color.r/2,color.g/2,color.b/2,color.a};}
+
+      //draw the pixels of the stripe as a vertical line
+      //DrawLineV(x, drawStart, drawEnd, color);
+      DrawLineEx({x,drawStart}, {x,drawEnd}, 1, color);
+
+
+
+
+
+
+
+  }
 
 }
 
@@ -150,6 +295,7 @@ void CoreClass::UpdateMap2D(){
   DrawLineV(convertPlayerPos,convertPlaneVector2,YELLOW);
   DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x*(20))+(planeVector.x*20)),playerPos.y+(playerDirection.y*(20))+(planeVector.y*20)},startX,startY),YELLOW);
   DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({(playerPos.x+(playerDirection.x*(20))-(planeVector.x*20)),playerPos.y+(playerDirection.y*(20))-(planeVector.y*20)},startX,startY),YELLOW);
+
     Vector2 posDirPlane1 = {playerPos.x+playerDirection.x-(planeVector.x), playerPos.y+playerDirection.y-(planeVector.y)};
     Vector2 posDirPlane2 = {playerPos.x+playerDirection.x+(planeVector.x), playerPos.y+playerDirection.y+(planeVector.y)};
     Vector2 ray1 = {(playerPos.x+playerDirection.x-(planeVector.x)), (planeVector.y)};
@@ -303,6 +449,7 @@ void CoreClass::DrawMap2D(){
       for(int j = 0; j < mapColumns; j++)
       {
         DrawText(TextFormat("%d",map2d[i][j]),12+startX+map2dX,startY+map2dY,20,WHITE);
+      //DrawText(TextFormat("%d,%d",i,j),12+startX+map2dX,startY+map2dY-1,2,WHITE);
         map2dX = map2dX + 25;
       }
       map2dY = map2dY + 25;
@@ -319,7 +466,7 @@ void CoreClass::DrawUIControls(){
   DrawText("---GUI---",uiRect.width/5+uiRect.x,30,20,WHITE);
   DrawText(TextFormat("grid-brightness: %.2f",fadeGrid),uiRect.width/5+uiRect.x,60,20,WHITE);
   DrawText("'O': -  'P': + ",uiRect.width/3+uiRect.x,80,10,WHITE);
-  DrawText(TextFormat("FOV: %f",directionLength),uiRect.width/5+uiRect.x,120,20,WHITE);
+  DrawText(TextFormat("FOV: %d°",(int)fov),uiRect.width/5+uiRect.x,120,20,WHITE);
   DrawText("'U': -  'I': + ",uiRect.width/3+uiRect.x,140,10,WHITE);
   DrawText(TextFormat("(%f,%f)", (float)GetMouseX(), (float)GetMouseY()),10,10,20,WHITE);
   DrawText(TextFormat("(%f,%f)", vectors.ConvertRaylibMouseCoordinateX((float)GetMouseX(),startX),vectors.ConvertRaylibMouseCoordinateY((float)GetMouseY(),startY)),10,30,20,WHITE);
@@ -345,6 +492,10 @@ void CoreClass::DrawingManager(){
   vectors.DrawPoint({startX+1000/2,startY+1000/2},BLUE);
   vectors.DrawPoint({convertPlayerPos.x,convertPlayerPos.y},GREEN);
   DrawUIControls();
+  int mapX1 = (int)((20)-(playerPos.y));
+  int mapY1 = (int)((20)+(playerPos.x));
+  DrawMap3D();
+
   EndDrawing();
 
 
@@ -389,6 +540,10 @@ void CoreClass::Update(){
     /*std::cout << "playerPosX: " << playerPos.x << '\n';
     std::cout << "playerPosY: " << playerPos.y << '\n';*/
     double rotation = 0.01*3;
+    if (IsKeyPressed(KEY_R)){
+      draw3Dmap = 1;
+    }
+    fov = (2 * atan(sqrt((planeVector.x*planeVector.x)+(planeVector.y*planeVector.y)) / sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y))))*(180/PI);
       if (!IsKeyDown(KEY_U)){
         if (IsKeyDown(KEY_I)){
           if(directionLength <= 1.07){

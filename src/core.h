@@ -37,6 +37,39 @@ public:
   Vector2 planeVector;
   Vector2 convertPlaneVector;
   double y;
+  double fov;
+  int draw3Dmap;
+  double cameraX; //x-coordinate in camera space
+  double rayDirX;
+  double rayDirY;
+  int mapX;
+  int mapY;
+
+
+
+  //length of ray from current position to next x or y-side
+  double sideDistX;
+  double sideDistY;
+  double deltaDistX;
+  double deltaDistY;
+   //length of ray from one x or y-side to next x or y-side
+
+  double perpWallDist;
+
+  //what direction to step in x or y-direction (either +1 or -1)
+  int stepX;
+  int stepY;
+
+  int hit; //was there a wall hit?
+  int side; //was a NS or a EW wall hit?
+  int lineHeight;
+
+  //calculate lowest and highest pixel to fill in current stripe
+  int drawStart;
+
+  int drawEnd;
+  Color color;
+
 private:
   //ui
   Rectangle uiRect;
