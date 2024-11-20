@@ -6,6 +6,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include "vectorClass.h"
+#include <limits>
 #define MAX_OBJECTS 200
 #define PI 3.1415926535
 class CoreClass
@@ -69,6 +70,7 @@ public:
 
   int drawEnd;
   Color color;
+  float what;
 
 private:
   //ui
