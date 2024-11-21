@@ -489,7 +489,7 @@ void CoreClass::DrawMap2D(){
     {
       for(int j = 0; j < mapColumns; j++)
       {
-        DrawText(TextFormat("%d",map2d[i][j]),12+startX+map2dX,startY+map2dY,20,WHITE);
+      DrawText(TextFormat("%d",map2d[i][j]),12+startX+map2dX,startY+map2dY,20,WHITE);
       //DrawText(TextFormat("%d,%d",i,j),12+startX+map2dX,startY+map2dY-1,2,WHITE);
         map2dX = map2dX + 25;
       }
@@ -619,12 +619,12 @@ void CoreClass::Update(){
         }
 
     if (IsKeyDown(KEY_W)){
-      playerPos.x += playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
-      playerPos.y += playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      if (map2d[int(20-playerPos.y)][int((20+playerPos.x) + playerDirection.x)] == 0)playerPos.x += playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      if (map2d[int((20-playerPos.y) - playerDirection.y)][int(20+playerPos.x)] == 0)playerPos.y += playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_S)){
-      playerPos.x -= playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
-      playerPos.y -= playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+    if (map2d[int(20-playerPos.y)][int((20+playerPos.x) - playerDirection.x)] == 0)playerPos.x -= playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      if (map2d[int((20-playerPos.y) + playerDirection.y)][int(20+playerPos.x)]== 0)playerPos.y -= playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_D)){
       std::cout << "playerDirX: "  << playerDirection.x << '\n';
