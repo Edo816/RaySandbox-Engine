@@ -71,6 +71,7 @@ public:
   int drawEnd;
   Color color;
   float what;
+  int isMovingBlocks;
 
 private:
   //ui

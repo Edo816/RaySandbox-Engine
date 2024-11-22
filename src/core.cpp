@@ -27,6 +27,7 @@ CoreClass::CoreClass(){
 
   this->draw3Dmap = 0;
   this->what = 1.0;
+  this->isMovingBlocks = 0;
 
 
 /*  this->playerDeltaX = cos(playerAngle)*5;
@@ -282,9 +283,12 @@ void CoreClass::addObject(){
 
   if (key == 32 && place == 0 && (highlightRec.x >= (-20) && highlightRec.x <= (19)) && (highlightRec.y <= (20) && highlightRec.y >= (-19))  )  {
 
-    VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,0,0,255},0};
-    vectors.object.push_back(new_object);
-    place = 1;
+    if(isMovingBlocks == 0){
+      VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,0,0,255},0};
+      vectors.object.push_back(new_object);
+      place = 1;
+    }
+
 
   }
 
@@ -358,6 +362,7 @@ if(a.selected == 1&&(!IsMouseButtonDown(MOUSE_BUTTON_LEFT))){
   }
   if(place == 0){
     if ((highlightRec.x >= (-20) && highlightRec.x <= (19)) && (highlightRec.y <= (20) && highlightRec.y >= (-19))) {
+      isMovingBlocks = 0;
       a.position.x = (int)vectors.ConvertMousePosition.x;
       a.position.y = (int)vectors.ConvertMousePosition.y+1;
     }else{
@@ -366,6 +371,7 @@ if(a.selected == 1&&(!IsMouseButtonDown(MOUSE_BUTTON_LEFT))){
 
   }
   if(place == 1){
+    isMovingBlocks = 0;
     a.position.x = (int)startPlacePosition.x;
     a.position.y = (int)startPlacePosition.y;
   }
@@ -413,6 +419,7 @@ if(((vectors.ConvertMousePosition.x >=  a.position.x && vectors.ConvertMousePosi
     vectors.rectangleSelected = 1;
     if (a.selected == 1) {
       DrawText("moving blocks",320,80,20,WHITE);
+      isMovingBlocks = 1;
       a.position.x = vectors.ConvertMousePosition.x-0.5;
       a.position.y = vectors.ConvertMousePosition.y+0.5;
     }
@@ -423,6 +430,7 @@ if(((vectors.ConvertMousePosition.x >=  a.position.x && vectors.ConvertMousePosi
     DrawText("blocks moved",320,120,20,WHITE);
     a.position.x = (int)vectors.ConvertMousePosition.x;
     a.position.y = (int)vectors.ConvertMousePosition.y+1;
+    isMovingBlocks = 0;
     for (auto& a : vectors.object) {
 
        a.selected = 0;
@@ -619,12 +627,12 @@ void CoreClass::Update(){
         }
 
     if (IsKeyDown(KEY_W)){
-      if (map2d[int(20-playerPos.y)][int((20+playerPos.x) + playerDirection.x)] == 0)playerPos.x += playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
-      if (map2d[int((20-playerPos.y) - playerDirection.y)][int(20+playerPos.x)] == 0)playerPos.y += playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      if (map2d[int(20-playerPos.y)][int((20+playerPos.x) + playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)))] == 0)playerPos.x += playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      if (map2d[int((20-playerPos.y) - playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)))][int(20+playerPos.x)] == 0)playerPos.y += playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_S)){
-    if (map2d[int(20-playerPos.y)][int((20+playerPos.x) - playerDirection.x)] == 0)playerPos.x -= playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
-      if (map2d[int((20-playerPos.y) + playerDirection.y)][int(20+playerPos.x)]== 0)playerPos.y -= playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+    if (map2d[int(20-playerPos.y)][int((20+playerPos.x) - playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)))] == 0)playerPos.x -= playerDirection.x/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
+      if (map2d[int((20-playerPos.y) + playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)))][int(20+playerPos.x)]== 0)playerPos.y -= playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_D)){
       std::cout << "playerDirX: "  << playerDirection.x << '\n';
