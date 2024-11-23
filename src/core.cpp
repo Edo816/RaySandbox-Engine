@@ -28,15 +28,36 @@ CoreClass::CoreClass(){
   this->draw3Dmap = 0;
   this->what = 1.0;
   this->isMovingBlocks = 0;
-
-
+  this->withTextures = 1;
+  this->textureIndex = 1;
 /*  this->playerDeltaX = cos(playerAngle)*5;
   this->playerDeltaY = sin(playerAngle)*5;*/
   std::vector<std::vector<int>>  map( mapRows , std::vector<int> (mapColumns, 0));
   map2d = map;
+  std::vector<std::vector<uint32_t>>  buffer1( ((int)GetScreenHeight()) , std::vector<uint32_t> (((int)GetScreenWidth()), static_cast<uint32_t>(0)));
+  buffer = buffer1;
 
+  for(int i = 0; i < 8; i++) {
+    this->texture[i].resize(TEXWIDTH * TEXHEIGHT);
+  }
 
-
+  //generate some textures
+  for(int x = 0; x < TEXWIDTH; x++)
+  for(int y = 0; y < TEXHEIGHT; y++)
+  {
+    int xorcolor = (x * 256 / TEXWIDTH) ^ (y * 256 / TEXHEIGHT);
+    //int xcolor = x * 256 / TEXWIDTH;
+    int ycolor = y * 256 / TEXHEIGHT;
+    int xycolor = y * 128 / TEXHEIGHT + x * 128 / TEXWIDTH;
+    texture[0][TEXWIDTH * y + x] = 65536 * 254 * (x != y && x != TEXWIDTH - y); //flat red texture with black cross
+    texture[1][TEXWIDTH * y + x] = xycolor + 256 * xycolor + 65536 * xycolor; //sloped greyscale
+    texture[2][TEXWIDTH * y + x] = 256 * xycolor + 65536 * xycolor; //sloped yellow gradient
+    texture[3][TEXWIDTH * y + x] = xorcolor + 256 * xorcolor + 65536 * xorcolor; //xor greyscale
+    texture[4][TEXWIDTH * y + x] = 256 * xorcolor; //xor green
+    texture[5][TEXWIDTH * y + x] = 65536 * 192 * (x % 16 && y % 16); //red bricks
+    texture[6][TEXWIDTH * y + x] = 65536 * ycolor; //red gradient
+    texture[7][TEXWIDTH * y + x] = 128 + 256 * 128 + 65536 * 128; //flat grey texture
+  }
 
 
   VectorClass::Objects objects[MAX_OBJECTS] = {
@@ -105,6 +126,8 @@ CoreClass::CoreClass(){
 
 
 void CoreClass::DrawMap3D(){
+
+
   //which box of the map we're in
   //std::cout << "playerDirection: " << playerDirection.x << '\n';
   //std::cout << "playerDirection: " << playerDirection.y<< '\n';
@@ -230,12 +253,59 @@ void CoreClass::DrawMap3D(){
       if(drawStart < 0)drawStart = 0;
        drawEnd = lineHeight / 2 + GetScreenHeight() / 2;
       if(drawEnd >= GetScreenHeight())drawEnd = GetScreenHeight() - 1;
+      //texturing calculations
+      if(withTextures == 1){
+        int texNum = map2d[mapY][mapX] - 1; //1 subtracted from it so that texture 0 can be used!
+
+        //calculate value of wallX
+        double wallX; //where exactly the wall was hit
+        if (side == 0) {wallX = playerPos.y - perpWallDist * rayDirY;}
+        else  { wallX = playerPos.x + perpWallDist * rayDirX;}
+        wallX -= floor((wallX));
 
 
-      switch(map2d[mapY][(mapX)])
+        //x coordinate on the texture
+        int texX = int(wallX * double(TEXWIDTH));
+        if(side == 0 && rayDirX > 0) texX = TEXWIDTH - texX - 1;
+        if(side == 1 && rayDirY < 0) texX = TEXWIDTH - texX - 1;
+
+        // How much to increase the texture coordinate per screen pixel
+        double step = 1.0 * TEXHEIGHT / lineHeight;
+        // Starting texture coordinate
+        double texPos = (drawStart - GetScreenHeight() / 2 + lineHeight / 2) * step;
+        for(int y = drawStart; y<drawEnd; y++)
+        {
+        // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
+          int texY = (int)texPos & (TEXHEIGHT - 1);
+          texPos += step;
+          uint32_t color = texture[texNum][TEXHEIGHT * texY + texX];
+          //make color darker for y-sides: R, G and B byte each divided through two with a "shift" and an "and"
+          if(side == 1){
+            color = (color >> 1) & 8355711;
+          }
+          //buffer[y][x] = color;
+          DrawPixelV({x,y},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
+        //  DrawRectangleV({x,y},{10,10},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
+        }
+
+
+      }else{
+
+
+
+
+
+
+     switch(map2d[mapY][(mapX)])
       {
         case 1:  color = {255,0,0,100};  break; //red
         case 2:  color = {0,0,255,100};  break; //green
+        case 3:  color = {0,255,0,100};  break;
+        case 4:  color = {255,255,0,100};  break;
+        case 5:  color = {0,255,255,100};  break;
+        case 6:  color = {255,0,255,100};  break;
+        case 7:  color = {180,255,150,100};  break;
+        case 8:  color = {160,200,255,100};  break;
         default: color = {255,0,0,100}; break; //yellow
       }
 
@@ -244,15 +314,37 @@ void CoreClass::DrawMap3D(){
 
       //draw the pixels of the stripe as a vertical line
       //DrawLineV(x, drawStart, drawEnd, color);
-      DrawLineEx({x,drawStart}, {x,drawEnd}, 1, color);
 
 
+      /*   for (int x = 0; x < 1280; x++)
+        {
+          DrawRectangle(y,x,20,20,BLUE);
+
+        }*/
+
+
+      // for(int y = 0; y < GetScreenHeight(); y++) for(int x = 0; x < GetScreenWidth(); x++) buffer[y][x] = 0; //clear the buffer instead of cls()
+
+
+
+     DrawLineEx({x,drawStart}, {x,drawEnd}, 1, color);
+
+}
 
 
 
 
 
   }
+
+
+/*  for(int x = 0; x<1280; x++){
+      for(int y = 0; y<720; y++){
+
+        DrawPixelV({x,y},{(buffer[y][x]) & 0xff,(buffer[y][x] >> 8) & 0xff,(buffer[y][x] >> 16) & 0xff,255});
+  }
+}
+ for(int y = 0; y < 720; y++) for(int x = 0; x < 1280; x++) buffer[y][x] = 0;*/
 
 }
 
@@ -283,10 +375,55 @@ void CoreClass::addObject(){
 
   if (key == 32 && place == 0 && (highlightRec.x >= (-20) && highlightRec.x <= (19)) && (highlightRec.y <= (20) && highlightRec.y >= (-19))  )  {
 
+
     if(isMovingBlocks == 0){
-      VectorClass::Objects new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,0,0,255},0};
-      vectors.object.push_back(new_object);
-      place = 1;
+      VectorClass::Objects new_object;
+      switch(textureIndex){
+        case 1: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,0,0,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+
+        case 2: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{0,0,255,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+        case 3:new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{0,255,0,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+
+        case 4: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,255,0,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+        case 5:new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{0,255,255,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+
+        case 6: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,0,255,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+
+        case 7: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{180,255,150,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+
+        case 8: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{160,200,255,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+        default: new_object = {{(int)vectors.ConvertMousePosition.x,(int)vectors.ConvertMousePosition.y+1},{25,25},{255,0,0,255},0};
+              vectors.object.push_back(new_object);
+              place = 1;
+              break;
+
+
+      }
+
     }
 
 
@@ -467,6 +604,25 @@ for(int i = 0; i < mapRows; i++)
         if(a.color.r == 0 && a.color.g == 0 && a.color.b == 255 && a.color.a == 255){
            map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 2;
         }
+        if(a.color.r == 0 && a.color.g == 255 && a.color.b == 0 && a.color.a == 255){
+           map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 3;
+        }
+        if(a.color.r == 255 && a.color.g == 255 && a.color.b == 0 && a.color.a == 255){
+           map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 4;
+        }
+        if(a.color.r == 0 && a.color.g == 255 && a.color.b == 255 && a.color.a == 255){
+           map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 5;
+        }
+        if(a.color.r == 255 && a.color.g == 0 && a.color.b == 255 && a.color.a == 255){
+           map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 6;
+        }
+        if(a.color.r == 180 && a.color.g == 255 && a.color.b == 150 && a.color.a == 255){
+           map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 7;
+        }
+        if(a.color.r == 160 && a.color.g == 200 && a.color.b == 255 && a.color.a == 255){
+           map2d[-((int)a.position.y-20)][(int)a.position.x+20] = 8;
+        }
+
 
       }
     }
@@ -528,6 +684,22 @@ void CoreClass::DrawUIControls(){
   DrawText(TextFormat("what: (%f)", what),GetScreenWidth() - uiRect.width-350,70,20,WHITE);
   DrawText(TextFormat("step: (%d,%d)", (int)stepX,(int)stepY),GetScreenWidth() - uiRect.width-350,90,20,WHITE);
   DrawText(TextFormat("map: (%d,%d)", (int)mapX,(int)mapY),GetScreenWidth() - uiRect.width-350,110,20,WHITE);
+  DrawRectangleV({textureButton.x,textureButton.y},{textureButton.width,textureButton.height},WHITE);
+  if(withTextures == 1){
+    DrawText("TEXTURES: ",textureButton.x+10,textureButton.y+10,20,BLACK);
+    DrawText("ON",textureButton.x+140,textureButton.y+10,20,GREEN);
+  }
+  if(withTextures == 0){
+    DrawText("TEXTURES: ",textureButton.x+10,textureButton.y+10,20,BLACK);
+    DrawText("OFF",textureButton.x+140,textureButton.y+10,20,RED);
+  }
+    DrawText("BLOCK INDEX: ",textureButton.x+10,textureButton.y+40,20,WHITE);
+    DrawRectangleV({textureButton.x+textureButton.width/3,textureButton.y+70},{20,20},WHITE);
+    DrawText(TextFormat("%d", textureIndex),textureButton.x+textureButton.width/3,textureButton.y+70,20,BLACK);
+    DrawRectangleV({textureIndexLeft.x,textureIndexLeft.y},{textureIndexLeft.width,textureIndexLeft.height},WHITE);
+    DrawText("<",textureIndexLeft.x,textureIndexLeft.y,20,BLACK);
+    DrawRectangleV({textureIndexRight.x,textureIndexRight.y},{textureIndexRight.width,textureIndexRight.height},WHITE);
+    DrawText(">",textureIndexRight.x,textureIndexRight.y,20,BLACK);
 }
 void CoreClass::DrawingManager(){
 
@@ -594,6 +766,25 @@ void CoreClass::Update(){
     /*std::cout << "playerPosX: " << playerPos.x << '\n';
     std::cout << "playerPosY: " << playerPos.y << '\n';*/
   //  std::cout << "directionLength: " << directionLength << '\n';
+   if(CheckCollisionPointRec( {GetMouseX(),GetMouseY()}, textureButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+     if(withTextures == 1){
+       withTextures = 0;
+     }else{
+       withTextures = 1;
+     }
+   }
+    if(CheckCollisionPointRec( {GetMouseX(),GetMouseY()}, textureIndexLeft) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+      if(textureIndex > 1){
+        textureIndex -= 1;
+      }
+
+    }
+    if(CheckCollisionPointRec( {GetMouseX(),GetMouseY()}, textureIndexRight) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+      if(textureIndex < 8){
+        textureIndex += 1;
+      }
+
+    }
     double rotation = 0.01*5;
     if (IsKeyPressed(KEY_R)){
       draw3Dmap = 1;
@@ -659,7 +850,9 @@ void CoreClass::Update(){
     this->windowWidth = GetScreenWidth();
     this->windowHeight = GetScreenHeight();
     this->uiRect = {(this->windowWidth/1.28f),0,GetScreenWidth()/4.57f,GetScreenHeight()};
-
+    this->textureButton = {uiRect.width/3+uiRect.x-70,uiRect.y+200,200,30};
+    this->textureIndexLeft = {textureButton.x+textureButton.width/3-50,textureButton.y+70,20,20};
+    this->textureIndexRight = {textureButton.x+textureButton.width/3+50,textureButton.y+70,20,20};
 
   }
 }

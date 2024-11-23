@@ -7,8 +7,11 @@
 #include <raymath.h>
 #include "vectorClass.h"
 #include <limits>
+#include <cstdint>
 #define MAX_OBJECTS 200
 #define PI 3.1415926535
+#define TEXWIDTH 64
+#define TEXHEIGHT 64
 class CoreClass
 {
 public:
@@ -72,7 +75,18 @@ public:
   Color color;
   float what;
   int isMovingBlocks;
+  std::vector<std::vector<uint32_t>> buffer;
+  std::vector<int> texture[8];
+  typedef struct Sample {
+    unsigned char *data;
+  } sample;
 
+  sample smp;
+  int withTextures;
+  Rectangle textureButton;
+  int textureIndex;
+  Rectangle textureIndexRight;
+  Rectangle textureIndexLeft;
 private:
   //ui
   Rectangle uiRect;
@@ -100,6 +114,7 @@ public:
   void DrawMap3D();
   void UpdateMap3D();
   void DrawUIControls();
+  void RenderBuffer(sample *smp);
 
   float fadeGrid;
 
