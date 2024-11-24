@@ -75,18 +75,27 @@ public:
   Color color;
   float what;
   int isMovingBlocks;
-  std::vector<std::vector<uint32_t>> buffer;
+  std::vector<std::vector<uint32_t>> buffer2;
   std::vector<int> texture[8];
-  typedef struct Sample {
-    unsigned char *data;
-  } sample;
+  typedef struct dataBuffer {
+    uint32_t *data;
+  } databuffer;
 
-  sample smp;
+  databuffer buffer;
   int withTextures;
   Rectangle textureButton;
   int textureIndex;
   Rectangle textureIndexRight;
   Rectangle textureIndexLeft;
+  int texSize;
+  int withBuffer;
+  Rectangle bufferButton;
+  Image img;
+  Texture2D textureBuffer;
+  Image screenImage;
+  void createImageBuffer(databuffer *buffer);
+
+  uint32_t pixelBuffer[921600];
 private:
   //ui
   Rectangle uiRect;
@@ -114,7 +123,7 @@ public:
   void DrawMap3D();
   void UpdateMap3D();
   void DrawUIControls();
-  void RenderBuffer(sample *smp);
+  //void RenderBuffer(sample *smp);
 
   float fadeGrid;
 

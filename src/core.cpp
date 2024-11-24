@@ -30,12 +30,13 @@ CoreClass::CoreClass(){
   this->isMovingBlocks = 0;
   this->withTextures = 1;
   this->textureIndex = 1;
+  this->withBuffer = 0;
 /*  this->playerDeltaX = cos(playerAngle)*5;
   this->playerDeltaY = sin(playerAngle)*5;*/
   std::vector<std::vector<int>>  map( mapRows , std::vector<int> (mapColumns, 0));
   map2d = map;
-  std::vector<std::vector<uint32_t>>  buffer1( ((int)GetScreenHeight()) , std::vector<uint32_t> (((int)GetScreenWidth()), static_cast<uint32_t>(0)));
-  buffer = buffer1;
+  std::vector<std::vector<uint32_t>>  buffer1( ((int)720) , std::vector<uint32_t> (((int)1280), static_cast<uint32_t>(0)));
+  buffer2 = buffer1;
 
   for(int i = 0; i < 8; i++) {
     this->texture[i].resize(TEXWIDTH * TEXHEIGHT);
@@ -58,7 +59,59 @@ CoreClass::CoreClass(){
     texture[6][TEXWIDTH * y + x] = 65536 * ycolor; //red gradient
     texture[7][TEXWIDTH * y + x] = 128 + 256 * 128 + 65536 * 128; //flat grey texture
   }
+  texSize = TEXWIDTH;
+  for(size_t i = 0; i < 8; i++){
+    for(size_t x = 0; x < texSize; x++){
+      for(size_t y = 0; y < x; y++){
+        std::swap(texture[i][texSize * y + x], texture[i][texSize * x + y]);
+      }
+    }
+  }
 
+
+
+ //{(buffer[y][x] >> 16) & 0xff,(buffer[y][x] >> 8) & 0xff,(buffer[y][x]) & 0xff,255}
+
+  int pixelIndex = 0;
+
+  for (int y = 0; y < 720; y++) {
+    for (int  x = 0; x < 1280; x++) {
+      this->pixelBuffer[pixelIndex] = ((buffer2[y][x]));
+
+
+
+      pixelIndex += 1;
+
+    }
+  }
+  // screenImage = { .data = pixels, .width = 1280, .height = 720, .mipmaps = 1, .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+  // textureBuffer = LoadTextureFromImage(screenImage);
+  //   Color screenImageColor = GetImageColor( screenImage, 0, 0);
+  //   std::cout << "screenImageColorR: " << (int)screenImageColor.r << '\n';
+  //   std::cout << "screenImageColorG: " << (int)screenImageColor.g << '\n';
+  //   std::cout << "screenImageColorB: " << (int)screenImageColor.b << '\n';
+  //   std::cout << "screenImageColorA: " << (int)screenImageColor.a << '\n';
+  //std::cout << "pixels: " << (int)pixels[3] << '\n';
+  //SetColor (int 1280, int 720, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+  //SetPixelColor(void *dstPtr, Color color, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+
+
+
+
+   // int index = 0;
+   // Color *pixels = (Color*)malloc(921600 * sizeof(Color));
+   // for (int y = 0; y < 720; y++) {
+   //      for (int x = 0; x < 1280; x++) {
+   //        int c1 =  (int)(buffer[y][x]>> 16) & 0xff;
+   //        int c2 = (int)(buffer[y][x]>> 8) & 0xff;
+   //        int c3 =  (int)(buffer[y][x]) & 0xff;
+   //        Color color1 = (Color){c1, c2, c3, (int)255};
+   //        pixels[index] = color1;
+   //
+   //      }
+   //
+   // }
+   //std::cout << "pixel: " << (int)pixels[0].a << '\n';
 
   VectorClass::Objects objects[MAX_OBJECTS] = {
     {{-10,-2}, {25,25},{255,0,0,255},0},{{-4, -2}, {25,25},{255,0,0,255},0}   };
@@ -125,8 +178,22 @@ CoreClass::CoreClass(){
 }
 
 
-void CoreClass::DrawMap3D(){
+void CoreClass::createImageBuffer(databuffer *buffer){
 
+  Image img = {
+       .data = buffer->data,
+       .width = 1280,
+       .height = 720,
+       .mipmaps = 1,
+       .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+
+   };
+
+   textureBuffer = LoadTextureFromImage(img);
+   std::cout << "image loaded" << '\n';
+}
+
+void CoreClass::DrawMap3D(){
 
   //which box of the map we're in
   //std::cout << "playerDirection: " << playerDirection.x << '\n';
@@ -278,13 +345,22 @@ void CoreClass::DrawMap3D(){
         // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
           int texY = (int)texPos & (TEXHEIGHT - 1);
           texPos += step;
-          uint32_t color = texture[texNum][TEXHEIGHT * texY + texX];
+          //uint32_t color = texture[texNum][TEXHEIGHT * texY + texX];
+          uint32_t color = texture[texNum][texSize * texX + texY];
           //make color darker for y-sides: R, G and B byte each divided through two with a "shift" and an "and"
           if(side == 1){
             color = (color >> 1) & 8355711;
           }
-          //buffer[y][x] = color;
-          DrawPixelV({x,y},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
+          if(withBuffer == 1){
+              //buffer[y][x] = color;
+              uint8_t color1[4] = { (color >> 16) & 0xff, (color >> 8) & 0xff,(color) & 0xff,static_cast<uint8_t>(255)};
+              uint32_t color2  = color1[0] | (color1[1] << 8) | (color1[2] << 16) | (color1[3] << 24);
+              this->pixelBuffer[(1280*y)+x] = color2;
+            //  std::cout << "pixelBuffer: " << (int)pixelBuffer[(1280*y)+x] << '\n';
+          }
+          if(withBuffer == 0){
+              DrawPixelV({x,y},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
+          }
         //  DrawRectangleV({x,y},{10,10},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
         }
 
@@ -337,6 +413,29 @@ void CoreClass::DrawMap3D(){
 
   }
 
+  if(withTextures == 1 && withBuffer == 1){
+  // for(int y = 0; y<720; y++){
+  //   for(int x = 0; x<1280; x++){
+  //     if(buffer[y][x] != static_cast<uint32_t>(0)){
+  //       DrawPixelV({x,y},{(buffer[y][x] >> 16) & 0xff,(buffer[y][x] >> 8) & 0xff,(buffer[y][x]) & 0xff,255});
+  //     }
+  //   }
+  //
+  // }
+  // for(int y = 0; y < 720; y++) for(int x = 0; x < 1280; x++) buffer[y][x] = 0;
+
+   DrawTexture(textureBuffer, 0, 0, WHITE);
+  UpdateTexture(textureBuffer, &pixelBuffer);
+
+}
+
+
+
+  for (int  pixelIndex = 0; pixelIndex < 921600; pixelIndex++) {
+    this->pixelBuffer[pixelIndex] = static_cast<uint32_t>(0);
+
+  }
+
 
 /*  for(int x = 0; x<1280; x++){
       for(int y = 0; y<720; y++){
@@ -345,7 +444,6 @@ void CoreClass::DrawMap3D(){
   }
 }
  for(int y = 0; y < 720; y++) for(int x = 0; x < 1280; x++) buffer[y][x] = 0;*/
-
 }
 
 void CoreClass::UpdateMap3D(){
@@ -685,6 +783,7 @@ void CoreClass::DrawUIControls(){
   DrawText(TextFormat("step: (%d,%d)", (int)stepX,(int)stepY),GetScreenWidth() - uiRect.width-350,90,20,WHITE);
   DrawText(TextFormat("map: (%d,%d)", (int)mapX,(int)mapY),GetScreenWidth() - uiRect.width-350,110,20,WHITE);
   DrawRectangleV({textureButton.x,textureButton.y},{textureButton.width,textureButton.height},WHITE);
+  DrawRectangleV({bufferButton.x,bufferButton.y},{bufferButton.width,bufferButton.height},WHITE);
   if(withTextures == 1){
     DrawText("TEXTURES: ",textureButton.x+10,textureButton.y+10,20,BLACK);
     DrawText("ON",textureButton.x+140,textureButton.y+10,20,GREEN);
@@ -692,6 +791,14 @@ void CoreClass::DrawUIControls(){
   if(withTextures == 0){
     DrawText("TEXTURES: ",textureButton.x+10,textureButton.y+10,20,BLACK);
     DrawText("OFF",textureButton.x+140,textureButton.y+10,20,RED);
+  }
+  if(withBuffer == 1){
+    DrawText("BUFFER: ",bufferButton.x+10,bufferButton.y+10,20,BLACK);
+    DrawText("ON",bufferButton.x+140,bufferButton.y+10,20,GREEN);
+  }
+  if(withBuffer == 0){
+    DrawText("BUFFER: ",bufferButton.x+10,bufferButton.y+10,20,BLACK);
+    DrawText("OFF",bufferButton.x+140,bufferButton.y+10,20,RED);
   }
     DrawText("BLOCK INDEX: ",textureButton.x+10,textureButton.y+40,20,WHITE);
     DrawRectangleV({textureButton.x+textureButton.width/3,textureButton.y+70},{20,20},WHITE);
@@ -708,7 +815,6 @@ void CoreClass::DrawingManager(){
 
 
   ClearBackground(BLACK);
-
 
 
   vectors.DrawGrid(YELLOW, fadeGrid,startX,startY);
@@ -785,6 +891,13 @@ void CoreClass::Update(){
       }
 
     }
+    if(CheckCollisionPointRec( {GetMouseX(),GetMouseY()}, bufferButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+      if(withBuffer == 1){
+        withBuffer = 0;
+      }else{
+        withBuffer = 1;
+      }
+    }
     double rotation = 0.01*5;
     if (IsKeyPressed(KEY_R)){
       draw3Dmap = 1;
@@ -826,7 +939,7 @@ void CoreClass::Update(){
       if (map2d[int((20-playerPos.y) + playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)))][int(20+playerPos.x)]== 0)playerPos.y -= playerDirection.y/sqrt((playerDirection.x*playerDirection.x)+(playerDirection.y*playerDirection.y)) * 0.1;
     }
     if (IsKeyDown(KEY_D)){
-      std::cout << "playerDirX: "  << playerDirection.x << '\n';
+      //std::cout << "playerDirX: "  << playerDirection.x << '\n';
       double oldDirX = playerDirection.x;
       playerDirection.x = (playerDirection.x * cos(-rotation) - playerDirection.y * sin(-rotation));
       playerDirection.y = oldDirX * sin(-rotation) + playerDirection.y * cos(-rotation);
@@ -835,7 +948,7 @@ void CoreClass::Update(){
       planeVector.y = oldPlaneX * sin(-rotation) + planeVector.y * cos(-rotation);
     }
     if (IsKeyDown(KEY_A)){
-      std::cout << "playerDirX: "  << playerDirection.x << '\n';
+      //std::cout << "playerDirX: "  << playerDirection.x << '\n';
       double oldDirX = playerDirection.x;
       playerDirection.x = (playerDirection.x * cos(rotation) - playerDirection.y * sin(rotation));
       playerDirection.y = oldDirX * sin(rotation) + playerDirection.y * cos(rotation);
@@ -853,7 +966,7 @@ void CoreClass::Update(){
     this->textureButton = {uiRect.width/3+uiRect.x-70,uiRect.y+200,200,30};
     this->textureIndexLeft = {textureButton.x+textureButton.width/3-50,textureButton.y+70,20,20};
     this->textureIndexRight = {textureButton.x+textureButton.width/3+50,textureButton.y+70,20,20};
-
+    this->bufferButton = {uiRect.width/3+uiRect.x-70,textureButton.y+110,200,30};
   }
 }
 

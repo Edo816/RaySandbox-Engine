@@ -10,7 +10,8 @@ int main(){
   InitWindow(core.windowWidth, core.windowHeight, "Raycaster-Engine");
 
   SetTargetFPS(60);
-
+  core.buffer = {.data = core.pixelBuffer };
+  core.createImageBuffer(&core.buffer);
   core.Update();
 
 
