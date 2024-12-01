@@ -31,6 +31,7 @@ CoreClass::CoreClass(){
   this->withTextures = 1;
   this->textureIndex = 1;
   this->withBuffer = 0;
+  this->scaleTextureBuffer = 0;
 /*  this->playerDeltaX = cos(playerAngle)*5;
   this->playerDeltaY = sin(playerAngle)*5;*/
   std::vector<std::vector<int>>  map( mapRows , std::vector<int> (mapColumns, 0));
@@ -180,7 +181,7 @@ CoreClass::CoreClass(){
 
 void CoreClass::createImageBuffer(databuffer *buffer){
 
-  Image img = {
+   renderImg = {
        .data = buffer->data,
        .width = 1280,
        .height = 720,
@@ -189,7 +190,7 @@ void CoreClass::createImageBuffer(databuffer *buffer){
 
    };
 
-   textureBuffer = LoadTextureFromImage(img);
+   textureBuffer = LoadTextureFromImage(renderImg);
    std::cout << "image loaded" << '\n';
 }
 
@@ -198,11 +199,11 @@ void CoreClass::DrawMap3D(){
   //which box of the map we're in
   //std::cout << "playerDirection: " << playerDirection.x << '\n';
   //std::cout << "playerDirection: " << playerDirection.y<< '\n';
-  for(int x = 0; x < GetScreenWidth(); x++)
+  for(int x = 0; x < this->windowWidth; x++)
   {
     //calculate ray position and direction
 
-     cameraX = 2 * x / double(GetScreenWidth()) - 1; //x-coordinate in camera space
+     cameraX = 2 * x / double(this->windowWidth) - 1; //x-coordinate in camera space
      rayDirX = (playerDirection.x+(-(planeVector.x*cameraX)));
      rayDirY = -(playerDirection.y+(-(planeVector.y*cameraX)));
      mapX = ((int)(20+(playerPos.x)));
@@ -313,13 +314,13 @@ void CoreClass::DrawMap3D(){
       // DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({mapX,mapY},startX,startY),BLUE);
     //  DrawLineV(convertPlayerPos,vectors.ConvertRaylibScreenCoordinates({playerPos.x + (rayDirX*20),playerPos.y + (rayDirY*20)},startX,startY),YELLOW);
       //Calculate height of line to draw on screen
-       lineHeight = (int)(GetScreenHeight() / perpWallDist);
+       lineHeight = this->windowHeight / perpWallDist;
 
       //calculate lowest and highest pixel to fill in current stripe
-       drawStart = -lineHeight / 2 + GetScreenHeight() / 2;
+      drawStart = -lineHeight / 2 + this->windowHeight  / 2;
       if(drawStart < 0)drawStart = 0;
-       drawEnd = lineHeight / 2 + GetScreenHeight() / 2;
-      if(drawEnd >= GetScreenHeight())drawEnd = GetScreenHeight() - 1;
+       drawEnd = lineHeight / 2 + this->windowHeight / 2;
+      if(drawEnd >= this->windowHeight)drawEnd = this->windowHeight - 1;
       //texturing calculations
       if(withTextures == 1){
         int texNum = map2d[mapY][mapX] - 1; //1 subtracted from it so that texture 0 can be used!
@@ -339,7 +340,7 @@ void CoreClass::DrawMap3D(){
         // How much to increase the texture coordinate per screen pixel
         double step = 1.0 * TEXHEIGHT / lineHeight;
         // Starting texture coordinate
-        double texPos = (drawStart - GetScreenHeight() / 2 + lineHeight / 2) * step;
+        double texPos = (drawStart - this->windowHeight / 2 + lineHeight / 2) * step;
         for(int y = drawStart; y<drawEnd; y++)
         {
         // Cast the texture coordinate to integer, and mask with (texHeight - 1) in case of overflow
@@ -351,15 +352,17 @@ void CoreClass::DrawMap3D(){
           if(side == 1){
             color = (color >> 1) & 8355711;
           }
-          if(withBuffer == 1){
+    //      if(withBuffer == 1 && this->windowWidth == (int)GetScreenWidth() || this->windowHeight == (int)GetScreenHeight()){
+       if(withBuffer == 1){
               //buffer[y][x] = color;
-              uint8_t color1[4] = { (color >> 16) & 0xff, (color >> 8) & 0xff,(color) & 0xff,static_cast<uint8_t>(255)};
+              uint8_t color1[4] = { (color >> 16) & 0xff, (color >> 8) & 0xff,(color) & 0xff,static_cast<uint8_t>(200)};
               uint32_t color2  = color1[0] | (color1[1] << 8) | (color1[2] << 16) | (color1[3] << 24);
-              this->pixelBuffer[(1280*y)+x] = color2;
-            //  std::cout << "pixelBuffer: " << (int)pixelBuffer[(1280*y)+x] << '\n';
+             this->pixelBuffer[(this->windowWidth*y)+x] = color2;
+
+            // std::cout << "pixelBuffer: " << (int)pixelBuffer[921599] << '\n';
           }
           if(withBuffer == 0){
-              DrawPixelV({x,y},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
+              DrawPixelV({x,y},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,200});
           }
         //  DrawRectangleV({x,y},{10,10},{(color >> 16) & 0xff,(color >> 8) & 0xff,(color) & 0xff,255});
         }
@@ -424,14 +427,47 @@ void CoreClass::DrawMap3D(){
   // }
   // for(int y = 0; y < 720; y++) for(int x = 0; x < 1280; x++) buffer[y][x] = 0;
 
-   DrawTexture(textureBuffer, 0, 0, WHITE);
-  UpdateTexture(textureBuffer, &pixelBuffer);
+   //DrawTexture(textureBuffer, 0, 0, WHITE);
+
+   if(scaleTextureBuffer == 0){
+     DrawTextureEx( textureBuffer, {(int)GetScreenWidth()-(int)GetScreenWidth(),(int)GetScreenHeight()-(int)GetScreenHeight()}, 0, (double)((double)GetScreenWidth()/(double)this->windowWidth), WHITE);
+   }else{
+     DrawTextureEx( textureBuffer, {(int)GetScreenWidth()-(int)GetScreenWidth(),(int)GetScreenHeight()-(int)GetScreenHeight()}, 0, 1, WHITE);
+   }
+
+  //DrawTexturePro(textureBuffer, {(int)GetScreenWidth()-(int)GetScreenWidth(),(int)GetScreenHeight()-(int)GetScreenHeight(),(int)GetScreenWidth(),(int)GetScreenHeight()}, {(int)GetScreenWidth()-(int)GetScreenWidth(),(int)GetScreenHeight()-(int)GetScreenHeight(),(int)GetScreenWidth(),(int)GetScreenHeight()},{0,0}, 1, WHITE);
+  UpdateTexture(textureBuffer, pixelBuffer);
 
 }
 
+  if( scaleTextureBuffer == 1 && (this->windowWidth != (int)GetScreenWidth() || this->windowHeight != (int)GetScreenHeight()) ){
+    withBuffer = 0;
+    uint32_t * newPixelBuffer = new uint32_t[(int)GetScreenWidth()*(int)GetScreenHeight()];
+    std::copy(pixelBuffer, pixelBuffer - this->windowWidth*this->windowHeight, newPixelBuffer);
+    delete[] pixelBuffer;
+    pixelBuffer = newPixelBuffer;
+    renderImg = {
+        .data = pixelBuffer,
+        .width = (int)GetScreenWidth(),
+        .height = (int)GetScreenHeight(),
+        .mipmaps = 1,
+        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+
+    };
+    UnloadTexture(textureBuffer);
+
+    textureBuffer = LoadTextureFromImage(renderImg);
+    //textureBuffer.id = 3;
+    //SetTextureFilter(textureBuffer,  TEXTURE_FILTER_BILINEAR);
+    std::cout << "texture rescaled" << '\n';
+    this->windowWidth = (int)GetScreenWidth();
+    this->windowHeight = (int)GetScreenHeight();
+    withBuffer = 1;
+  }
 
 
-  for (int  pixelIndex = 0; pixelIndex < 921600; pixelIndex++) {
+
+  for (int  pixelIndex = 0; pixelIndex < this->windowWidth*this->windowHeight; pixelIndex++) {
     this->pixelBuffer[pixelIndex] = static_cast<uint32_t>(0);
 
   }
@@ -784,6 +820,7 @@ void CoreClass::DrawUIControls(){
   DrawText(TextFormat("map: (%d,%d)", (int)mapX,(int)mapY),GetScreenWidth() - uiRect.width-350,110,20,WHITE);
   DrawRectangleV({textureButton.x,textureButton.y},{textureButton.width,textureButton.height},WHITE);
   DrawRectangleV({bufferButton.x,bufferButton.y},{bufferButton.width,bufferButton.height},WHITE);
+  DrawRectangleV({scaleTextureBufferButton.x,scaleTextureBufferButton.y},{scaleTextureBufferButton.width,scaleTextureBufferButton.height},WHITE);
   if(withTextures == 1){
     DrawText("TEXTURES: ",textureButton.x+10,textureButton.y+10,20,BLACK);
     DrawText("ON",textureButton.x+140,textureButton.y+10,20,GREEN);
@@ -799,6 +836,14 @@ void CoreClass::DrawUIControls(){
   if(withBuffer == 0){
     DrawText("BUFFER: ",bufferButton.x+10,bufferButton.y+10,20,BLACK);
     DrawText("OFF",bufferButton.x+140,bufferButton.y+10,20,RED);
+  }
+  if(scaleTextureBuffer == 1){
+    DrawText("DYNAMIC TEXTURE SCALING: ",scaleTextureBufferButton.x+10,scaleTextureBufferButton.y+10,10,BLACK);
+    DrawText("ON",scaleTextureBufferButton.x+170,scaleTextureBufferButton.y+10,20,GREEN);
+  }
+  if(scaleTextureBuffer == 0){
+    DrawText("DYNAMIC TEXTURE SCALING: ",scaleTextureBufferButton.x+10,scaleTextureBufferButton.y+10,10,BLACK);
+    DrawText("OFF",scaleTextureBufferButton.x+170,scaleTextureBufferButton.y+10,20,RED);
   }
     DrawText("BLOCK INDEX: ",textureButton.x+10,textureButton.y+40,20,WHITE);
     DrawRectangleV({textureButton.x+textureButton.width/3,textureButton.y+70},{20,20},WHITE);
@@ -898,6 +943,13 @@ void CoreClass::Update(){
         withBuffer = 1;
       }
     }
+    if(CheckCollisionPointRec( {GetMouseX(),GetMouseY()}, scaleTextureBufferButton) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+      if(scaleTextureBuffer == 1){
+        scaleTextureBuffer = 0;
+      }else{
+        scaleTextureBuffer = 1;
+      }
+    }
     double rotation = 0.01*5;
     if (IsKeyPressed(KEY_R)){
       draw3Dmap = 1;
@@ -960,13 +1012,14 @@ void CoreClass::Update(){
     if (IsKeyDown(KEY_LEFT))  startX -= 1.0f;
     if (IsKeyDown(KEY_UP)) startY -= 1.0f;
     if (IsKeyDown(KEY_DOWN)) startY += 1.0f;
-    this->windowWidth = GetScreenWidth();
-    this->windowHeight = GetScreenHeight();
-    this->uiRect = {(this->windowWidth/1.28f),0,GetScreenWidth()/4.57f,GetScreenHeight()};
+    /*this->windowWidth = GetScreenWidth();
+    this->windowHeight = GetScreenHeight();*/
+    this->uiRect = {(GetScreenWidth()/1.28f),0,GetScreenWidth()/4.57f,GetScreenHeight()};
     this->textureButton = {uiRect.width/3+uiRect.x-70,uiRect.y+200,200,30};
     this->textureIndexLeft = {textureButton.x+textureButton.width/3-50,textureButton.y+70,20,20};
     this->textureIndexRight = {textureButton.x+textureButton.width/3+50,textureButton.y+70,20,20};
     this->bufferButton = {uiRect.width/3+uiRect.x-70,textureButton.y+110,200,30};
+    this->scaleTextureBufferButton = {uiRect.width/3+uiRect.x-70,bufferButton.y+110,230,30};
   }
 }
 

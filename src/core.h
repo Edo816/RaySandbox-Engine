@@ -94,8 +94,11 @@ public:
   Texture2D textureBuffer;
   Image screenImage;
   void createImageBuffer(databuffer *buffer);
-
-  uint32_t pixelBuffer[921600];
+  //uint32_t  pixelBuffer[921600];
+  uint32_t * pixelBuffer = new uint32_t[921600];
+  Image renderImg;
+  int scaleTextureBuffer;
+  Rectangle scaleTextureBufferButton;
 private:
   //ui
   Rectangle uiRect;
